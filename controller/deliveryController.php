@@ -1,6 +1,9 @@
 <?php
+session_start();
 
 require_once("../model/Delivery.php");
+require_once("../model/Supplier.php");
+require_once("../model/Medicine.php");
 
 header('Content-Type: application/json');
 
@@ -18,7 +21,7 @@ if (empty($_POST["action"])) {
         // Modify to check for errors returned by getResults() inside the Delivery.php
         case 'getAllDeliveryRecords':
 
-            $result = $delivery->getAllDeliveryRecord();
+            $result = $delivery->getFilteredDeliveryRecord(receiver_id: $_POST["receiver_id"]);
 
             echo json_encode($result);
             exit();
@@ -54,20 +57,41 @@ if (empty($_POST["action"])) {
 
             exit();
             break;
-        case 'createDelivery':
-            if (empty($_POST["supplier_id"]) || empty($_POST["receiver_id"]) || empty($_POST["total_amount"])) {
-                echo json_encode(['error' => 'Missing necessary inputs.']);
 
-                exit();
-            }
+        // ================================================================
+        // FUNCTIONS TO INSERT DATA
+        // ================================================================
+        case 'createDeliveryRecord':
+            $supplier = new Supplier();
+            $medicine = new Medicine();
 
-            $result = $delivery->createDelivery($_POST["supplier_id"], $_POST["receiver_id"], $_POST["total_amount"]);
+            $result = [];
 
-            if (!$result) {
-                echo json_encode([
-                    "error" => "Error on creating delivery"
-                ]);
-                exit();
+            // Get Delivery Record Details for delivery_table
+            $deliveryDetails = $_POST["deliveryRecordDetails"];
+
+            // Get Delivery Items List for for delivery_detail_table
+            $deliveryItemsList = $_POST["deliveryItems"];
+
+            // Get the supplier ID
+            $supplier_id = $supplier->getFilteredSuppliers(supplier_name: $deliveryDetails["supplier_name"])[0]["supplier_id"];
+
+            // Creates new Delivery Record on delivery_table and get its ID
+            $delivery_id = $delivery->createDeliveryRecord(
+                supplier_id: $supplier_id,
+                receiver_id: $deliveryDetails["receiver_id"],
+                total_amount: $deliveryDetails["total_amount"]
+            )["last_id"];
+
+            // Loop through the Delivery Items List to record every Delivery Items Detail
+            for ($index = 0; $index < count($deliveryItemsList); $index++) {
+                $item = $deliveryItemsList[$index];
+
+                $medicine_id = $medicine->getFilteredMedicine(medicine_name_query: $deliveryItemsList[0]["medicineName"])[0]["medicine_id"];
+                $delivery->createDeliveryDetailRecord($delivery_id, $medicine_id, $item["receivedQuantity"], $item["batchNumber"], $item["expiryDate"], $item["unitPrice"]);
+
+                // Fetch all incomplete orders and check if the current medicine can be allocated
+
             }
 
             echo json_encode($result);
@@ -84,7 +108,6 @@ if (empty($_POST["action"])) {
 
         default:
             echo json_encode(['error' => 'Invalid action']);
-
             exit();
             break;
     }

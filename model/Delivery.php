@@ -8,15 +8,7 @@ class Delivery extends Db
     // ================================================================
     // FUNCTIONS TO FETCH DATA
     // ================================================================
-    public function getAllDeliveryRecord()
-    {
-        $sql = "SELECT d.delivery_number, FORMAT(d.total_amount, 2) AS total_cost, DATE_FORMAT(d.received_date, '%M, %e, %Y') as received_date, s.name AS supplier_name FROM delivery_table d 
-                JOIN supplier_table s ON d.supplier_id = s.supplier_id;";
-
-        return $this->getResult($sql);
-    }
-
-    public function getFilteredDeliveryRecord($receiver_id, $supplier_name_filter, $from_date_filter, $to_date_filter, $search_query)
+    public function getFilteredDeliveryRecord($receiver_id, $supplier_name_filter = "", $from_date_filter = "", $to_date_filter = "", $search_query = "")
     {
 
         $sql = "SELECT 
@@ -48,10 +40,7 @@ class Delivery extends Db
             $params[] = $to_date_filter . " 23:59:59";
         }
 
-        // $stmt = $this->connect()->prepare($sql);
-        // $stmt->execute($params);
-
-        return $this->getResult($sql, $params);
+        return $this->getFetchResult($sql, $params);
     }
 
     public function getDeliveryRecordById($delivery_id)
@@ -137,25 +126,47 @@ class Delivery extends Db
         return $stmt->fetchAll();
     }
 
-    public function createDelivery($supplier_id, $receiver_id, $total_amount)
-    {
-        $sql = "INSERT INTO delivery_table (supplier_id, receiver_id, total_amount) VALUES (?, ?, ?)";
-
-        $stmt = $this->connect()->prepare($sql);
-
-        $stmt->execute([
-            $supplier_id,
-            $receiver_id,
-            $total_amount,
-        ]);
-
-
-        return $stmt->rowCount();
-    }
-
     // ================================================================
     // FUNCTIONS TO INSERT DATA
     // ================================================================
+    public function createDeliveryRecord($supplier_id, $receiver_id, $total_amount, $delivery_number = "",)
+    {
+        $sql = "INSERT INTO delivery_table (supplier_id, receiver_id, delivery_number, total_amount)
+                VALUES (?, ?, ?, ?);";
+
+        $params = [
+            $supplier_id,
+            $receiver_id,
+            $delivery_number,
+            $total_amount
+        ];
+
+        $result = $this->getCreateDataResult($sql, $params);
+
+        if (isset($result["status"]) && $result["status"] == "error") {
+            return $result;
+        }
+
+        return $result;
+    }
+
+    public function createDeliveryDetailRecord($delivery_id, $medicine_id, $received_quantity, $batch_number, $expiry_date, $unit_price)
+    {
+        $sql = "INSERT INTO delivery_detail_table (delivery_id, medicine_id, received_quantity, batch_number, expiry_date, unit_price) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+
+        $params = [
+            $delivery_id,
+            $medicine_id,
+            $received_quantity,
+            $batch_number,
+            $expiry_date,
+            $unit_price
+        ];
+
+        $result = $this->getCreateDataResult($sql, $params);
+        return $result;
+    }
 
     // ================================================================
     // FUNCTIONS TO UPDATE DATA
@@ -168,21 +179,49 @@ class Delivery extends Db
     // Function to catch the error if there are any error when
     // connecting to database (Fetching, Inserting, Deleting, or 
     // Updating Records)
+
+    // Used for fetching or getting data
     // 
     // $query - SQL Query to be performed
     // $executeParameters (Optional Parameter) - The parameters needed to execute the prepared statements
-    //                    - This is the values needed to match the number of placeholders ('?' symbol)
+    //                                         - This is the values needed to match the number of placeholders ('?' symbol)
     // 
     // Can be called as:
-    //  - getResult($sql);
-    //  - getResult($sql, $executeParameters);
-    public function getResult($query, $executeParameters = [])
+    //  - getFetchResult($sql);
+    //  - getFetchResult($sql, $executeParameters);
+    public function getFetchResult($query, $executeParameters = [])
     {
         try {
             $stmt = $this->connect()->prepare($query);
             $stmt->execute($executeParameters);
 
             return $stmt->fetchAll();
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+
+    // Used for Inserting, Updating, or Deleting data
+    // 
+    // $query - SQL Query to be performed
+    // $executeParameters (Optional Parameter) - The parameters needed to execute the prepared statements
+    //                                         - This is the values needed to match the number of placeholders ('?' symbol)
+    // 
+    // Can be called as:
+    //  - getCreateDataResult($sql);
+    //  - getCreateDataResult($sql, $executeParameters);
+    public function getCreateDataResult($query, $executeParameters = [])
+    {
+        try {
+            $stmt = $this->connect()->prepare($query);
+            $stmt->execute($executeParameters);
+
+            return [
+                'status'        => 'success',
+                'affected_rows' => $stmt->rowCount(),
+                'last_id'       => $this->connect()->lastInsertId()
+            ];
         } catch (\Throwable $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
         }

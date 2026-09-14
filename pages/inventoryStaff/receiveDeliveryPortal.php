@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+if (!isset($_SESSION["user"])) {
+    header("location: /pages/error/unauthorized.html");
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -30,12 +39,10 @@
 </head>
 
 <body class="relative w-full h-dvh bg-white text-dark-blue text-sm font-display">
-    <!-- Back to top button -->
-
     <!-- Receive Delivery Side Panel Drawer -->
     <aside id="addRecordPanel" class="hidden fixed z-60 flex items-end justify-end bg-gray-600/40 w-full h-dvh">
         <!-- Panel Content -->
-        <section class="relative z-10 w-full h-[80dvh] bg-white shadow-2xl flex flex-col justify-between font-display lg:h-dvh lg:w-[40%] xl:w-[25%]">
+        <section class="relative z-10 w-full h-[80dvh] bg-white shadow-2xl flex flex-col justify-between font-display lg:h-dvh lg:w-[40%] xl:w-[35%] 2xl:w-[25%]">
             <!-- Header -->
             <section class="p-5 border-b flex items-center justify-between bg-gray-50/50">
                 <section>
@@ -49,7 +56,7 @@
             </section>
 
             <!-- Form Scroll Area -->
-            <section class="p-5 overflow-y-auto flex-1 flex flex-col gap-5 text-sm scrollbar-none">
+            <section id="deliveryForm" class="p-5 overflow-y-auto flex-1 flex flex-col gap-5 text-sm scrollbar-none">
                 <!-- Delivery Info Header -->
                 <section class="flex flex-col gap-3">
                     <label class="text-xs font-medium text-gray-400">Delivery Information</label>
@@ -57,7 +64,7 @@
                     <!-- Supplier Select -->
                     <section>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Supplier Name</label>
-                        <select id="receiveDeliverySuppliersList" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none"></select>
+                        <select id="receiveDeliverySuppliersList" class="required-input w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none"></select>
                     </section>
 
                 </section>
@@ -72,10 +79,7 @@
                     <section class="relative">
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Medicine Name</label>
                         <section class="relative">
-                            <input id="receiveDeliveryMedicineNameInput" type="text" placeholder="Search medicine..." class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
-                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                            <input id="receiveDeliveryMedicineNameInput" type="text" placeholder="Search medicine..." required class="required-input w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 pr-3 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
                         </section>
                         <section id="receiveDeliveryMedicineResultsList" class="hidden absolute w-full max-h-50 flex flex-col gap-2 overflow-scroll h-fit p-3 mt bg-gray-50 rounded-lg mt-2 border border-gray-200 scrollbar-none z-20"></section>
                     </section>
@@ -84,18 +88,18 @@
                     <section class="grid grid-cols-2 gap-3">
                         <section>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Batch Number</label>
-                            <input type="text" placeholder="e.g., BATCH-1001" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
+                            <input id="receiveDeliveryBatchNumberInput" type="text" placeholder="e.g., BATCH-1001" required class="required-input w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
                         </section>
                         <section>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Expiry Date</label>
-                            <input type="date" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
+                            <input id="receiveDeliveryExpireyDateInput" type="date" required class="required-input w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
                         </section>
                     </section>
 
                     <!-- Unit Cost / Price Input -->
                     <section>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Unit Cost (₱)</label>
-                        <input id="receiveDeliveryUnitCostInput" type="number" readonly step="0.01" placeholder="0.00" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
+                        <input id="receiveDeliveryUnitCostInput" type="number" readonly required step="0.01" placeholder="0.00" class="required-input w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-secondary focus:outline-none" />
                     </section>
 
                     <!-- Received Quantity & Subtotal Controls -->
@@ -103,19 +107,27 @@
                         <section>
                             <p class="text-xs text-gray-500 mb-1">Received Quantity</p>
                             <section class="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden">
-                                <button type="button" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold">-</button>
-                                <input id="receiveDeliveryReceivedQuantityInput" type="number" value="1" min="1" class="w-20 text-center text-sm font-semibold border-none focus:outline-none" />
-                                <button type="button" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold">+</button>
+                                <button onclick="decrementReceivedQuantity()" type="button" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold">
+                                    <svg class="lucide lucide-minus size-4" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                    </svg></button>
+                                <input id="receiveDeliveryReceivedQuantityInput" type="number" value="1" min="1" required class="required-input  w-20 text-center text-sm font-semibold border-none focus:outline-none" />
+                                <button onclick="incrementReceivedQuantity()" type="button" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold">
+                                    <svg class="lucide lucide-plus size-4" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                        <path d="M12 5v14" />
+                                    </svg>
+                                </button>
                             </section>
                         </section>
                         <section class="text-right">
                             <p class="text-xs text-gray-500 mb-0.5">Subtotal</p>
-                            <p id="receiveDeliverySubtotalDisplayText" class="text-base font-bold text-gray-900">₱0.00</p>
+                            <p class="text-base font-bold text-gray-900">₱<span id="receiveDeliverySubtotalDisplayText">0</span></p>
                         </section>
                     </section>
 
                     <!-- Add Item Button -->
-                    <button type="button" class="w-full border-2 border-dashed border-gray-300 hover:border-secondary hover:text-secondary text-gray-600 font-semibold py-2 rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5 mt-1 cursor-pointer">
+                    <button id="addItemBtn" type="submit" class="w-full border-2 border-dashed border-gray-300 hover:border-secondary hover:text-secondary text-gray-600 font-semibold py-2 rounded-lg text-sm transition-colors flex items-center justify-center gap-1.5 mt-1 cursor-pointer">
                         <span>Add item</span>
                     </button>
                 </section>
@@ -126,52 +138,10 @@
                 <section class="flex flex-col gap-3">
                     <section class="flex items-center justify-between">
                         <label class="text-xs font-medium text-gray-400">Added Delivery Items</label>
-                        <span class="text-xs font-semibold text-secondary bg-blue-50 px-2 py-0.5 rounded-full">2 Items</span>
+                        <span id="receiveDeliveryAddedItemCountDisplayText" class="text-xs font-semibold text-secondary bg-blue-50 px-2 py-0.5 rounded-full">2 Items</span>
                     </section>
 
-                    <section class="flex flex-col gap-2.5">
-                        <!-- Added Delivery Item 1 -->
-                        <section class="bg-gray-50 p-3 rounded-xl border border-gray-200 flex flex-col gap-2 relative group">
-                            <section class="flex justify-between items-start pr-6">
-                                <section>
-                                    <p class="font-semibold text-gray-900 text-sm leading-tight">Amoxicillin (Amoxil)</p>
-                                    <p class="text-xs text-gray-500 mt-0.5">Batch: BATCH-1001 • Exp: 2027-06-30</p>
-                                </section>
-                                <p class="font-bold text-gray-900 text-sm">₱625.00</p>
-                            </section>
-                            <section class="flex justify-between items-center border-t border-gray-200/60 pt-2 text-xs text-gray-600">
-                                <span>₱12.50 × 50 pcs</span>
-                                <span class="text-gray-400 font-medium">Subtotal</span>
-                            </section>
-                            <!-- Remove Button -->
-                            <button type="button" class="absolute top-3 right-2 text-gray-400 hover:text-red-500 transition-colors p-1" title="Remove Item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </section>
-
-                        <!-- Added Delivery Item 2 -->
-                        <section class="bg-gray-50 p-3 rounded-xl border border-gray-200 flex flex-col gap-2 relative group">
-                            <section class="flex justify-between items-start pr-6">
-                                <section>
-                                    <p class="font-semibold text-gray-900 text-sm leading-tight">Paracetamol (Biogesic)</p>
-                                    <p class="text-xs text-gray-500 mt-0.5">Batch: BATCH-1002 • Exp: 2027-08-15</p>
-                                </section>
-                                <p class="font-bold text-gray-900 text-sm">₱4,500.00</p>
-                            </section>
-                            <section class="flex justify-between items-center border-t border-gray-200/60 pt-2 text-xs text-gray-600">
-                                <span>₱45.00 × 100 pcs</span>
-                                <span class="text-gray-400 font-medium">Subtotal</span>
-                            </section>
-                            <!-- Remove Button -->
-                            <button type="button" class="absolute top-3 right-2 text-gray-400 hover:text-red-500 transition-colors p-1" title="Remove Item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </section>
-                    </section>
+                    <section id="addedItemsListContainer" class="flex flex-col gap-2.5"></section>
                 </section>
 
                 <hr class="border-gray-100">
@@ -182,7 +152,7 @@
 
                     <section class="flex justify-between font-bold text-gray-900 text-base">
                         <span>Total Amount</span>
-                        <span class="text-emerald-600">₱5,125.00</span>
+                        <span class="text-emerald-600">₱<span id="receiveDeliveryTotalAmountDisplayText">0.00</span></span>
                     </section>
                 </section>
 
@@ -193,7 +163,7 @@
                 <button type="button" class="closeAddRecordBtn w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-lg text-sm transition-colors">
                     Cancel
                 </button>
-                <button type="submit" class="w-2/3 bg-primary hover:bg-secondary text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
+                <button onclick="createDeliveryRecord()" type="submit" class="w-2/3 bg-primary hover:bg-secondary text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
                     Receive Delivery
                 </button>
             </section>
@@ -204,7 +174,7 @@
     <!-- Filter Panel -->
     <aside id="deliveryFilterPanel" class="hidden fixed z-60 flex items-end justify-end bg-gray-600/40 w-full h-dvh">
         <!-- Panel Content -->
-        <section class="relative z-10 w-full h-[80dvh] bg-white shadow-2xl flex flex-col justify-between font-display lg:h-dvh lg:w-[40%] xl:w-[25%]">
+        <section class="relative z-10 w-full h-[80dvh] bg-white shadow-2xl flex flex-col justify-between font-display lg:h-dvh lg:w-[40%] xl:w-[35%] 2xl:w-[25%]">
             <!-- Header -->
             <section class="p-5 border-b flex items-center justify-between bg-gray-50/50">
                 <section>
@@ -265,7 +235,7 @@
     <!-- Detail View Panel -->
     <aside id="viewDetailPanel" class="hidden fixed bottom-0 right-0 z-60 bg-gray-900/40 w-dvw h-dvh border-l flex flex-col justify-end font-display transition duration-200 lg:flex-row">
         <!-- Main Content Wrapper -->
-        <section class="w-full h-[80%] flex flex-col bg-white p-6 justify-between lg:h-dvh lg:w-[40%] xl:w-[25%] overflow-y-auto scrollbar-none">
+        <section class="w-full h-[80%] flex flex-col bg-white p-6 justify-between overflow-y-auto scrollbar-none lg:h-dvh lg:w-[40%] xl:w-[35%] 2xl:w-[25%]">
 
             <section class="flex flex-col w-full gap-6 items-start justify-between">
                 <!-- Header & Close Button -->
@@ -468,11 +438,10 @@
     </main>
 
     <script src="../../js/jquery.min.js"></script>
+    <script src="../../js/helperFunctions.js"></script>
     <script>
         $(document).ready(() => {
             displayAllDeliveryRecordByReceiverId(6);
-
-            displayMedicineByName();
 
             displayAllSuppliers();
         })
@@ -483,6 +452,9 @@
          - Functions that are needed and do specific things 
         ==============================================================================
         */
+        let receivedItemsList = [];
+        let cartItems = [];
+
         // Create a render function for table row
         function displayAllDeliveryRecordByReceiverId(userId) {
             let data = {
@@ -498,11 +470,11 @@
 
             $("#tableBody").html("");
             $.post("../../controller/deliveryController.php", data, function(response) {
+
                 // Error Handling Here
                 if (response.status && response.status === "error") {
                     console.log(response.message);
                 }
-
 
                 for (let index = 0; index < response.length; index++) {
                     const delivery = response[index];
@@ -669,7 +641,6 @@
             })
         }
 
-
         function displayMedicineByName(medicineName = "") {
             let data = {
                 action: "getMedicineByName",
@@ -680,7 +651,6 @@
                 // Error Handling
 
                 let medicineList = response.data;
-                console.log(medicineList);
 
                 if (medicineList.length == 0) {
                     $("#receiveDeliveryMedicineResultsList").html(`<p class="text-xs text-center text-gray-400 font-regular cursor-pointer hover:bg-gray-200 p-3 rounded-sm transition duration-100">There is no matching result</p>`);
@@ -699,16 +669,122 @@
                     $("#receiveDeliveryMedicineResultsList").append(list);
 
                     $(`#medicineItem${medicine.medicine_id}`).click(() => {
-                        $("#receiveDeliveryMedicineNameInput").focusout();
+                        $("#receiveDeliveryMedicineNameInput").val(medicine.name).focusout();
                         hideReceiveDeliveryMedicineNameResultsList()
 
                         $("#receiveDeliveryUnitCostInput").val(medicine.selling_price)
-                        $("#receiveDeliverySubtotalDisplayText").text(Number.parseFloat(getComputedSubtotal(medicine.selling_price, $("#receiveDeliveryReceivedQuantityInput").val())));
-
+                        computeReceivedQuantitySubtotal();
                     })
                 }
 
 
+            })
+        }
+
+        function addReceivedItem() {
+            let receivedItem = {
+                supplierName: $("#receiveDeliverySuppliersList").val().trim(),
+                medicineName: $("#receiveDeliveryMedicineNameInput").val().trim(),
+                batchNumber: $("#receiveDeliveryBatchNumberInput").val().trim(),
+                expiryDate: $("#receiveDeliveryExpireyDateInput").val().trim(),
+                unitPrice: Number.parseFloat($("#receiveDeliveryUnitCostInput").val().trim()),
+                receivedQuantity: $("#receiveDeliveryReceivedQuantityInput").val().trim(),
+                subtotal: Number.parseFloat($("#receiveDeliverySubtotalDisplayText").text().trim()),
+                cashierId: 6,
+            };
+
+            let inputList = $("#deliveryForm input");
+            let isInputFilled = true;
+
+            for (let index = 0; index < inputList.length; index++) {
+                const input = inputList[index];
+
+                if (isEmptyField(input.id)) {
+                    $(`#${input.id}`).removeClass("focus:ring-secondary focus:ring-secondary focus:ring-2")
+                        .addClass("border-red-700 bg-red-100 text-red-700 focus:ring-red-700 focus:ring-1")
+                        .focus();
+
+                    isInputFilled = false;
+                    break;
+                } else {
+                    $(`#${input.id}`).removeClass("border-red-700 bg-red-100 text-red-700 focus:ring-red-700")
+                        .addClass("border-gray-300 bg-gray-50 text-black focus:ring-red-700 focus:ring-secondary focus:outline-none");
+                }
+            }
+
+            if (isInputFilled) {
+                cartItems.push(receivedItem);
+
+                inputList.val("");
+                $("#receiveDeliverySubtotalDisplayText").text("0")
+
+                displayReceivedItems();
+            }
+        }
+
+        function removeReceivedItem(cartIndex) {
+            cartItems.splice(cartIndex, 1);
+
+            displayReceivedItems();
+        }
+
+        function displayReceivedItems() {
+            let items = cartItems;
+            let totalAmount = 0;
+            $("#addedItemsListContainer").html("");
+
+            items.forEach((item, index) => {
+                let newItem = `
+                    <section class="bg-gray-50 p-3 rounded-xl border border-gray-200 flex flex-col gap-2 relative group">
+                        <section class="flex justify-between items-start pr-6">
+                            <section>
+                                <p class="font-semibold text-gray-900 text-sm leading-tight">${item.medicineName}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Batch: ${item.batchNumber}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Exp: ${item.expiryDate}</p>
+                            </section>
+                            <p class="font-bold text-gray-900 text-sm">₱${item.subtotal}</p>
+                        </section>
+                        <section class="flex justify-between item-center border-t border-gray-200/60 pt-2 text-xs text-gray-600">
+                            <span>₱${item.unitPrice} × ${item.receivedQuantity} pcs</span>
+                            <span class="text-gray-400 font-medium">Subtotal</span>
+                        </section>
+                        <!-- Remove Button -->
+                        <button onclick="removeReceivedItem(${index})" type="button" class="absolute top-3 right-2 text-gray-400 hover:text-red-500 transition-colors p-1" title="Remove Item">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </section>
+                `;
+
+                totalAmount += Number.parseFloat(item.subtotal);
+
+                $("#addedItemsListContainer").append(newItem);
+            });
+
+            $("#receiveDeliveryAddedItemCountDisplayText").text(items.length + " Item(s)");
+            $("#receiveDeliveryTotalAmountDisplayText").text(formatter.format(totalAmount));
+        }
+
+        function createDeliveryRecord() {
+            let data = {
+                action: "createDeliveryRecord",
+                deliveryRecordDetails: {
+                    supplier_name: $("#receiveDeliverySuppliersList").val().trim(),
+                    receiver_id: 6, // Channge this later
+                    total_amount: Number.parseFloat($("#receiveDeliveryTotalAmountDisplayText").text().trim()) || 0,
+
+                },
+                deliveryItems: cartItems
+            };
+
+            // if (data.deliveryItems.length === 0) {
+            //     console.log("There are no items recorded.");
+            //     return;
+            // }
+
+            $.post("../../controller/deliveryController.php", data, function(response) {
+                console.log(response);
             })
         }
 
@@ -719,7 +795,6 @@
         - Functions just show/hide elements
         ==============================================================================
          */
-
         $("#sidebar ").on("mouseenter", function() {
             $("#sidebar .sidebar-hidden-item").removeClass("lg:hidden").show(200);
             $("#sidebar a").removeClass("lg:w-fit");
@@ -758,6 +833,7 @@
 
         function toggleAddRecordPanel() {
             $("#addRecordPanel").toggleClass("hidden");
+            displayReceivedItems();
         }
 
         function toggleViewDetailPanel() {
@@ -782,11 +858,23 @@
         - Functions to help reduce redundancy
         ==============================================================================
         */
+        const formatter = new Intl.NumberFormat('en-US');
 
-        function getComputedSubtotal(unitPrice, quantity) {
-            return unitPrice * quantity;
+        // Function to compute for Received Quantity Subtotal
+        function computeReceivedQuantitySubtotal() {
+            let unitPriceInput = $("#receiveDeliveryUnitCostInput").val().trim();
+            let quantityInput = $("#receiveDeliveryReceivedQuantityInput").val().trim() || 0;
+
+            let invalidChars = ["+", "-", "e", "E"];
+            if (!isValidInput(invalidChars, quantityInput)) {
+                return;
+            }
+
+            let result = (Number.parseFloat(unitPriceInput) * Number.parseFloat(quantityInput)) || 0;
+            if (!Number.isNaN(result) && result > -1) {
+                $("#receiveDeliverySubtotalDisplayText").text(`${formatter.format(result)}`);
+            }
         }
-
 
         $("#applyFilterBtn").click(() => {
             displayAllDeliveryRecordByReceiverId(6);
@@ -796,8 +884,46 @@
 
         $("#searchDeliveryForm").submit((e) => {
             e.preventDefault();
+
+            // Change Later
             displayAllDeliveryRecordByReceiverId(6)
         })
+
+        $("#addItemBtn").on("click", (e) => {
+            // e.preventDefault();
+
+            addReceivedItem();
+        })
+
+        // Check if the input field is empty
+        function isEmptyField(inputFieldId) {
+            if ($(`#${inputFieldId}`).val() == "" || $(`#${inputFieldId}`).val() == 0) {
+                return true;
+            }
+
+            return false;
+        }
+
+        // Increment and Decrement Received Quantity
+        function incrementReceivedQuantity() {
+            let receiveQuantityTxt = $("#receiveDeliveryReceivedQuantityInput");
+            let currentReceivedQuantity = Number.parseFloat(receiveQuantityTxt.val() || 0);
+
+            $("#receiveDeliveryReceivedQuantityInput").val(currentReceivedQuantity += 1);
+
+            computeReceivedQuantitySubtotal()
+        }
+
+        function decrementReceivedQuantity() {
+            let receiveQuantityTxt = $("#receiveDeliveryReceivedQuantityInput");
+            let currentReceivedQuantity = Number.parseFloat(receiveQuantityTxt.val() || 0);
+
+            if (currentReceivedQuantity > 1) {
+                $("#receiveDeliveryReceivedQuantityInput").val(currentReceivedQuantity -= 1);
+
+                computeReceivedQuantitySubtotal()
+            }
+        }
 
         // Debounce Function when the Inventory Staff types inside the medicine name input
         let timeout;
@@ -809,6 +935,7 @@
 
             timeout = setTimeout(() => {
                 displayMedicineByName(medicineToSearch);
+
                 if (medicineToSearch === "") {
                     hideReceiveDeliveryMedicineNameResultsList();
                 } else {
@@ -817,16 +944,29 @@
             }, 500);
         })
 
-        $("#receiveDeliveryReceivedQuantityInput").on("input", () => {
-
+        // Debounce Function when the Inventory Staff types inside the received quantity input
+        $("#receiveDeliveryReceivedQuantityInput").on("input", (e) => {
             clearTimeout(timeout);
 
             timeout = setTimeout(() => {
-                let unitPrice = Number.parseFloat($("#receiveDeliveryUnitCostInput").val());
-                let quantity = Number.parseFloat($("#receiveDeliveryReceivedQuantityInput").val());
-                $("#receiveDeliverySubtotalDisplayText").text(getComputedSubtotal(unitPrice, quantity));
+                computeReceivedQuantitySubtotal();
             }, 500);
-        })
+        });
+        $("#receiveDeliveryReceivedQuantityInput").on("keydown", (e) => {
+            if (e.key == "+" || e.key == "-" || e.key == "e" || e.key == "E") {
+                e.preventDefault();
+                return;
+            }
+        });
+        $("#receiveDeliveryReceivedQuantityInput").on("paste", (e) => {
+            let pastedText = (e.originalEvent.clipboardData || window.clipboardData).getData("text");
+            let invalidChars = ["+", "-", "e", "E"];
+
+            if (!isValidInput(invalidChars, pastedText)) {
+                e.preventDefault();
+                return;
+            }
+        });
     </script>
 
 </body>

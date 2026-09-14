@@ -1,63 +1,5 @@
 <?php
-
-$conn = new mysqli("localhost", "root", "@Password123", "pharmacy_db");
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['user_email'] ?? '';
-    $password = $_POST['user_password'] ?? '';
-
-    if (empty($email) || empty($password)) {
-        echo json_encode(["status" => "error", "message" => "Please fill in all fields."]);
-        exit;
-    }
-
-    // 1. Prepare SQL statement matching both email and plain text password
-    $sql = "SELECT user_id, role_id FROM user_table WHERE email = ? AND hash_password = ? LIMIT 1";
-    $stmt = $conn->prepare($sql);
-
-    if ($stmt) {
-        // 2. Bind string parameters ('ss' for two strings: email and password)
-        $stmt->bind_param("ss", $email, $password);
-        $stmt->execute();
-
-        // 3. Get query results
-        $result = $stmt->get_result();
-
-        if ($row = $result->fetch_assoc()) {
-            // Start user session
-            session_start();
-            $_SESSION['user_id'] = $row['user_id'];
-            $_SESSION['role_id'] = $row['role_id'];
-
-            echo json_encode(["status" => "success", "message" => "Login successful!"]);
-
-            switch ($row['role_id']) {
-                case 1:
-                    header("Location: pages/admin/dashboard.php");
-                    break;
-                case 3:
-                    header("Location: pages/inventoryStaff/deliveryManagement.php");
-                    break;
-                case 4:
-                    header("Location: pages/cashier/posTerminal.php");
-                    break;
-
-                default:
-                    # code...
-                    break;
-            }
-        } else {
-            echo json_encode(["status" => "error", "message" => "Invalid email or password."]);
-        }
-
-        $stmt->close();
-    } else {
-        echo json_encode(["status" => "error", "message" => "Database query failed."]);
-    }
-}
-
-
-
+session_start();
 ?>
 
 <!DOCTYPE html>
@@ -167,11 +109,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <button type="submit" name="login_btn" id="loginBtn" class="bg-primary text-white font-medium p-3 rounded-lg cursor-pointer hover:bg-primary/90">Login</button>
         </form>
+
     </main>
 
     <script src="./js/jquery.min.js"></script>
 
     <script>
+        $(document).ready(() => {
+            let data = {
+                action: "handleUserLogin",
+                email: "admin@pharmacy.test",
+                password: "Admin123!"
+            };
+
+            $.post("./controller/authController.php", data, function(response) {
+                console.log(response);
+            })
+        })
     </script>
 </body>
 

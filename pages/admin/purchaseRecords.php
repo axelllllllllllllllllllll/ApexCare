@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+if (!isset($_SESSION["user"])) {
+    header("location: /pages/error/unauthorized.html");
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
