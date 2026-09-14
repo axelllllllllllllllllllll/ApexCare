@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION["user"])) {
+if (!isset($_SESSION["user"]) || $_SESSION["role_id"] != 1) {
     header("location: /pages/error/unauthorized.html");
 }
 ?>

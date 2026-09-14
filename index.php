@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 ?>
 
 <!DOCTYPE html>
@@ -70,39 +71,39 @@ session_start();
             <section class="w-full h-fit flex flex-col gap-5">
                 <section class="w-full h-fit flex flex-col gap-2 items-start">
                     <label for="" class="text-md font-medium">Email</label>
-                    <section class="w-full flex items-center gap-2 border border-gray-600/40 p-3 rounded-lg">
+                    <section id="emailTxt" class="w-full flex items-center gap-2 border border-gray-600/40 p-3 rounded-lg">
                         <svg class="lucide lucide-mail-icon lucide-mail size-4 text-gray-600/40" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
                             <rect x="2" y="4" width="20" height="16" rx="2" />
                         </svg>
-                        <input type="email" name="user_email" id="" required placeholder="exampleemail@gmail.com" class="w-full outline-none">
+                        <input type="email" name="user_email" id="userEmailInput" required placeholder="exampleemail@gmail.com" class="w-full outline-none">
                     </section>
-                    <section class="flex items-center gap-1 text-red-500">
+                    <section id="userEmailErrorMsg" class="hidden flex items-center gap-1 text-red-500">
                         <svg class="lucide lucide-info-icon lucide-info size-3.5 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M12 16v-4" />
                             <path d="M12 8h.01" />
                         </svg>
-                        <p class="text-xs md:text-md" id="userEmailErrorMsg">Error Message</p>
+                        <p class="text-xs md:text-md" id="">Error Message</p>
                     </section>
                 </section>
                 <section class="w-full h-fit flex flex-col gap-2 items-start">
                     <label for="" class="text-md font-medium">Password</label>
-                    <section class="w-full flex items-center gap-2 border border-gray-600/40 p-3 rounded-lg">
+                    <section id="passwordTxt" class="w-full flex items-center gap-2 border border-gray-600/40 p-3 rounded-lg">
                         <svg class="lucide lucide-key-icon lucide-key size-4 text-gray-600/40" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4" />
                             <path d="m21 2-9.6 9.6" />
                             <circle cx="7.5" cy="15.5" r="5.5" />
                         </svg>
-                        <input type="password" name="user_password" id="" required class="w-full outline-none">
+                        <input type="password" name="user_password" id="userPasswordInput" required class="w-full outline-none">
                     </section>
-                    <section class="flex items-center gap-1 text-red-500">
+                    <section id="userPasswordErrorMsg" class="hidden flex items-center gap-1 text-red-500">
                         <svg class="lucide lucide-info-icon lucide-info size-3.5 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="0" height="0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M12 16v-4" />
                             <path d="M12 8h.01" />
                         </svg>
-                        <p class="text-xs md:text-md" id="userPasswordErrorMsg">Error Message</p>
+                        <p class="text-xs md:text-md" id="">Error Message</p>
                     </section>
                 </section>
             </section>
@@ -115,17 +116,61 @@ session_start();
     <script src="./js/jquery.min.js"></script>
 
     <script>
-        $(document).ready(() => {
+        $("#loginBtn").on("click", (e) => {
+            e.preventDefault();
+
+            handleUserLogin();
+        })
+
+        function handleUserLogin() {
             let data = {
                 action: "handleUserLogin",
-                email: "admin@pharmacy.test",
-                password: "Admin123!"
+                email: $("#userEmailInput").val().trim(),
+                password: $("#userPasswordInput").val().trim()
             };
 
             $.post("./controller/authController.php", data, function(response) {
-                console.log(response);
+
+                if (response.status) {
+                    if (response.status.toLowerCase() == "failed" && response.message.toLowerCase() === "invalid email") {
+                        $("#emailTxt").addClass("bg-red-100 text-red-700 border-red-700");
+                        $("#emailTxt svg").removeClass("text-gray-600/40").addClass("text-red-700");
+                        $("#userEmailErrorMsg").toggleClass("hidden")
+
+                        $("#userEmailErrorMsg p").text(response.message);
+                    }
+
+                    if (response.status.toLowerCase() == "failed" && response.message.toLowerCase() === "incorrect password") {
+                        $("#passwordTxt").addClass("bg-red-100 text-red-700 border-red-700");
+                        $("#passwordTxt svg").removeClass("text-gray-600/40").addClass("text-red-700");
+                        $("#userPasswordErrorMsg").toggleClass("hidden")
+                        $("#userPasswordErrorMsg p").text(response.message);
+                    }
+
+                    if (response.status.toLowerCase() === "success") {
+                        console.log(response);
+
+
+                        switch (response.user.role_id) {
+                            case 1:
+                                window.location = "/pages/cashier/cashierPos.php";
+                                break;
+                            case 2:
+                                window.location = "/pages/admin/dashboard.php";
+                                break;
+                            case 3:
+                                window.location = "/pages/inventoryStaff/receiveDeliveryPortal.php";
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                }
+
+
             })
-        })
+        }
     </script>
 </body>
 
